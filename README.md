@@ -75,11 +75,11 @@ Wants=boosty-downloader.timer
 [Service]
 Type=oneshot
 User=root
-Environment=YT_DLP="yt-dlp-boosty"
-Environment=COOKIES_FILE="/srv/boosty.cookies.txt"
-Environment=TARGET_PATH="/media/MediaFiles/Boosty"
-Environment=TEMP_PATH="/media/MediaFiles/Boosty.tmp"
-Environment=CHANNELS="blog1 blog2 blog3"
+Environment="YT_DLP=yt-dlp-boosty"
+Environment="COOKIES_FILE=/srv/boosty.cookies.txt"
+Environment="TARGET_PATH=/media/MediaFiles/Boosty"
+Environment="TEMP_PATH=/media/MediaFiles/Boosty.tmp"
+Environment="CHANNELS=blog1 blog2 blog3"
 ExecStart=boosty-downloader
 
 [Install]
@@ -134,7 +134,11 @@ Edit `boosty-downloader.service`:
 nano /etc/systemd/system/boosty-downloader.service
 
 [Service]
-ExecStartPost=curl -L -X GET 'http://localhost:32400/library/sections/<SECTION_ID>/refresh' \
+Environment="PLEX_SECTION=<PLEX_SECTION_ID>"
+Environment="PLEX_TOKEN=<PLEX_TOKEN>"
+...
+ExecStartPost=curl -sS -L -X GET \
+    'http://localhost:32400/library/sections/${PLEX_SECTION}/refresh' \
     -H 'Accept: application/json' \
-    -H 'X-Plex-Token: <TOKEN>'
+    -H 'X-Plex-Token: ${PLEX_TOKEN}'
 ```
