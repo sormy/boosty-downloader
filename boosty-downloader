@@ -1,6 +1,9 @@
 #!/usr/bin/bash
 
+# shellcheck disable=SC2046
+
 YT_DLP="${YT_DLP:-yt-dlp-boosty}"
+# TEMP_PATH="/media/MediaFiles/Boosty.tmp"
 # COOKIES_FILE="/srv/boosty.cookies.txt"
 # TARGET_DIR="/media/MediaFiles/Boosty"
 # CHANNELS="blog1 blog2 blog3"
@@ -69,6 +72,7 @@ download_video() {
 
     "$YT_DLP" \
         --cookies "$COOKIES_FILE" \
+        $([ -n "$TEMP_PATH" ] && echo "-P temp:$TEMP_PATH") \
         -o "s${season}e${episode} - %(title)s [%(id)s].%(ext)s" \
         --add-metadata \
         "https://boosty.to/$channel/posts/$id"
