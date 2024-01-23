@@ -1,0 +1,116 @@
+#!/usr/bin/bash
+
+YT_DLP="${YT_DLP:-yt-dlp-boosty}"
+# COOKIES_FILE="/srv/boosty.cookies.txt"
+# TARGET_DIR="/media/MediaFiles/Boosty"
+# CHANNELS="blog1 blog2 blog3"
+
+list_media_types() {
+    local channel="$1"
+
+    local limit="25"
+    local offset=""
+    local content=""
+
+    while true; do
+        content="$(curl --silent "https://api.boosty.to/v1/blog/$channel/media_album/?type=video&limit=$limit&limit_by=media&offset=$offset")"
+        offset="$(echo "$content" | jq -r .extra.offset)"
+        echo "$content" | jq -r '.data.mediaPosts[] | [.post.id, "video"] | join("\t")'
+        if [ -z "$offset" ]; then
+            break
+        fi
+    done
+}
+
+list_media_posts() {
+    local channel="$1"
+
+    local limit="25"
+    local offset=""
+    local offset_param=""
+    local content=""
+
+    while true; do
+        offset_param="$([ -n "$offset" ] && echo "offset=$offset")"
+        content="$(curl --silent "https://api.boosty.to/v1/blog/$channel/post/?limit=$limit&$offset_param")"
+        offset="$(echo "$content" | jq -r .extra.offset)"
+        echo "$content" | jq -r '.data[] | select(.title!="") | [.id, .user.blogUrl, .createdAt, .title] | join("\t")'
+        if [ -z "$offset" ]; then
+            break
+        fi
+    done
+}
+
+list_existing_media() {
+    local target_dir="$1"
+    
+    find "$target_dir" -iname '*.mp4' \
+        | grep '\[[a-z0-9-]*\]\.mp4$' \
+        | sed -e 's/^.*\[//' -e 's/\].*$//' -e 's/$/\texists/'
+}
+
+list_media() {
+    local channel="$1"
+    local target_dir="$2"
+
+    join -j 1 -a 1 -t $'\t' \
+        <(list_media_posts "$channel" | sort) \
+        <(list_media_types "$channel" | sort) \
+        | join -j 1 -a 1 -t $'\t' \
+            - \
+            <(list_existing_media "$target_dir/$channel" | sort)
+}
+
+download_video() {
+    local channel="$1"
+    local id="$2"
+    local season="$3"
+    local episode="$4"
+
+    "$YT_DLP" \
+        --cookies "$COOKIES_FILE" \
+        -o "s${season}e${episode} - %(title)s [%(id)s].%(ext)s" \
+        --add-metadata \
+        "https://boosty.to/$channel/posts/$id"
+}
+
+main() {
+    if [ -z "$COOKIES_FILE" ]; then
+        echo "set COOKIES_FILE environment variable to point to cookies file in netscape format"
+        exit 1
+    fi
+
+    if [ -z "$TARGET_DIR" ]; then
+        echo "set TARGET_DIR environment variable to point to target directory"
+        exit 1
+    fi
+
+    if [ -z "$CHANNELS" ]; then
+        echo "set CHANNELS environment variable to list of Boosty blogs separated by space"
+        exit 1
+    fi
+    
+    local season
+    local episode
+
+    for channel in $CHANNELS; do
+        echo "Downloading list of media for channel $channel"
+        list_media "$channel" "$TARGET_DIR" \
+            | while IFS=$'\t' read -r id blog timestamp title type exists; do
+                if [ -n "$exists" ]; then
+                    echo "Skipping media $id ($title) - already exists"
+                elif [ "$type" != "video" ]; then
+                    echo "Skipping media $id ($title) - not a video"
+                else
+                    echo "Downloading media file $id ($title)"
+                    season="$(date -d "@$timestamp" +'%Y')"
+                    episode="$(date -d "@$timestamp" +'%m%d01')"
+                    mkdir -p "$TARGET_DIR/$channel/Season $season"
+                    cd "$TARGET_DIR/$channel/Season $season"
+                    download_video "$channel" "$id" "$season" "$episode"
+                fi
+            done
+    done
+}
+
+main "$@"
