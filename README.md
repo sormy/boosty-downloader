@@ -55,7 +55,7 @@ ln -sfv /srv/boosty-downloader/boosty-downloader /usr/local/bin/boosty-downloade
 
 ```sh
 export COOKIES_FILE="/srv/boosty.cookies.txt"
-export TARGET_DIR="/media/MediaFiles/Boosty"
+export TARGET_PATH="/media/MediaFiles/Boosty"
 export CHANNELS="blog1 blog2 blog3"
 # if boosty support will be merged into upstream
 # export YT_DLP="yt-dlp"
@@ -75,9 +75,11 @@ Wants=boosty-downloader.timer
 [Service]
 Type=oneshot
 User=root
+Environment=YT_DLP="yt-dlp-boosty"
 Environment=COOKIES_FILE="/srv/boosty.cookies.txt"
-Environment=TARGET_DIR="/media/MediaFiles/Boosty"
-Environment=TARGET_DIR="blog1 blog2 blog3"
+Environment=TARGET_PATH="/media/MediaFiles/Boosty"
+Environment=TEMP_PATH="/media/MediaFiles/Boosty.tmp"
+Environment=CHANNELS="blog1 blog2 blog3"
 ExecStart=boosty-downloader
 
 [Install]
