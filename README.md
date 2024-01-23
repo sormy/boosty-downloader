@@ -113,3 +113,28 @@ journalctl -u boosty-downloader
 # if all is ok, enable timer
 systemctl enable boosty-downloader.timer
 ```
+
+## Plex rescan
+
+Logint to Plex console, open debug console, open local storage and grab value of
+"myPlexAccessToken".
+
+Find section IDs:
+
+```sh
+curl -L -X GET 'http://localhost:32400/library/sections' \
+    -H 'Accept: application/json' \
+    -H 'X-Plex-Token: <TOKEN>' \
+    | jq '.MediaContainer.Directory[] | { key: .key, title: .title }'
+```
+
+Edit `boosty-downloader.service`:
+
+```
+nano /etc/systemd/system/boosty-downloader.service
+
+[Service]
+ExecStartPost=curl -L -X GET 'http://localhost:32400/library/sections/<SECTION_ID>/refresh' \
+    -H 'Accept: application/json' \
+    -H 'X-Plex-Token: <TOKEN>'
+```
