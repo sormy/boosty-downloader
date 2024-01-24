@@ -96,7 +96,7 @@ Requires=boosty-downloader.service
 
 [Timer]
 Unit=boosty-downloader.service
-OnCalendar=*-*-* */1:00:00
+OnCalendar=hourly
 
 [Install]
 WantedBy=timers.target
