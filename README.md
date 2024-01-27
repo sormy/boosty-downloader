@@ -137,6 +137,7 @@ nano /etc/systemd/system/boosty-downloader.service
 ...
 Environment="PLEX_SECTION=<PLEX_SECTION_ID>"
 Environment="PLEX_TOKEN=<PLEX_TOKEN>"
+# see more https://support.plex.tv/articles/201638786-plex-media-server-url-commands/
 ExecStartPost=curl -sS -L -X GET \
     'http://localhost:32400/library/sections/${PLEX_SECTION}/refresh' \
     -H 'X-Plex-Token: ${PLEX_TOKEN}'
@@ -166,7 +167,13 @@ nano /etc/systemd/system/boosty-downloader.service
 ...
 Environment="JELLYFIN_ITEM=<JELLYFIN_ITEM_ID>"
 Environment="JELLYFIN_TOKEN=<JELLYFIN_API_KEY>"
+# see more https://api.jellyfin.org/#tag/ItemRefresh/operation/RefreshItem
 ExecStartPost=curl -sS -L -X POST \
     'http://localhost:8096/Items/${JELLYFIN_ITEM}/Refresh' \
-    -H 'Authorization: MediaBrowser Token="${JELLYFIN_TOKEN}"'
+    -H 'Authorization: MediaBrowser Token="${JELLYFIN_TOKEN}"' \
+    -d 'Recursive=true' \
+    -d 'MetadataRefreshMode=Default' \
+    -d 'ImageRefreshMode=Default' \
+    -d 'ReplaceAllImages=false' \
+    -d 'ReplaceAllMetadata=false'
 ```
