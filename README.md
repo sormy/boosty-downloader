@@ -116,7 +116,7 @@ systemctl enable boosty-downloader.timer
 
 ## Plex rescan
 
-Logint to Plex console, open debug console, open local storage and grab value of
+Login to Plex console, open debug console, open local storage and grab value of
 "myPlexAccessToken".
 
 Find section IDs:
@@ -134,11 +134,39 @@ Edit `boosty-downloader.service`:
 nano /etc/systemd/system/boosty-downloader.service
 
 [Service]
+...
 Environment="PLEX_SECTION=<PLEX_SECTION_ID>"
 Environment="PLEX_TOKEN=<PLEX_TOKEN>"
-...
 ExecStartPost=curl -sS -L -X GET \
     'http://localhost:32400/library/sections/${PLEX_SECTION}/refresh' \
-    -H 'Accept: application/json' \
     -H 'X-Plex-Token: ${PLEX_TOKEN}'
+```
+
+## Jellyfin rescan
+
+Login to Jellyfin console, open settings and create new api key.
+
+Find item IDs:
+
+```sh
+curl -sS -L -X GET -G \
+    "http://localhost:8096/Items" \
+    -H 'Authorization: MediaBrowser Token=<JELLYFIN_API_KEY>' \
+    -d 'Recursive=True' \
+    -d 'IncludeItemTypes=CollectionFolder' \
+    | jq '.Items[] | { id: .Id, name: .Name }'
+```
+
+Edit `boosty-downloader.service`:
+
+```
+nano /etc/systemd/system/boosty-downloader.service
+
+[Service]
+...
+Environment="JELLYFIN_ITEM=<JELLYFIN_ITEM_ID>"
+Environment="JELLYFIN_TOKEN=<JELLYFIN_API_KEY>"
+ExecStartPost=curl -sS -L -X POST \
+    'http://localhost:8096/Items/${JELLYFIN_ITEM}/Refresh' \
+    -H 'Authorization: MediaBrowser Token="${JELLYFIN_TOKEN}"'
 ```
