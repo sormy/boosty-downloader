@@ -7,34 +7,25 @@ be used as scheduled job to download new videos and make them available in Plex.
 
 1. Dependencies: curl bash coreutils sed jq
 
-2. A special patched version of yt-dlp is needed (if boosty support is merged,
-   then not needed):
+2. A version of yt-dlp 2024.03.10+ is needed:
 
 ```sh
-# install custom fork with boosty support
-# this is needed until support will be landed into yt-dlp repo
-# boosty support https://github.com/yt-dlp/yt-dlp/pull/8704
-cd /srv
-git clone https://github.com/megapro17/yt-dlp
+# install latest yt-dlp using pip in virtual environment
+mkdir -p /srv/yt-dlp
 cd /srv/yt-dlp
 apt install python3-venv
-python3 -m venv .venv
-source .venv/bin/activate
-pip3 install -r requirements.txt
+python3 -m venv .
+./bin/pip3 install yt-dlp
 
-# create wrapper with yt-dlp-boosty name
-touch /srv/yt-dlp/yt-dlp-boosty
-chmod +x /srv/yt-dlp/yt-dlp-boosty
-ln -sf /srv/yt-dlp/yt-dlp-boosty /usr/local/bin/yt-dlp-boosty
+# check version of installed yt-dlp to be 2024.03.10+
+./bin/yt-dlp --version
 
-nano /srv/yt-dlp/yt-dlp-boosty
+# for convinience, create symlink in search path
+ln -sf /srv/yt-dlp/bin/yt-dlp /usr/local/bin/yt-dlp
 
-#!/usr/bin/bash
-
-YT_DLP_HOME="/srv/yt-dlp"
-source "$YT_DLP_HOME/.venv/bin/activate"
-export PYTHONPATH="$YT_DLP_HOME"
-exec python3 -m yt_dlp "$@"
+# update shell search path and check version again
+hash -r
+yt-dlp --version
 ```
 
 3. Cookies file
@@ -75,7 +66,7 @@ Wants=boosty-downloader.timer
 [Service]
 Type=oneshot
 User=root
-Environment="YT_DLP=yt-dlp-boosty"
+Environment="YT_DLP=/usr/local/bin/yt-dlp"
 Environment="COOKIES_FILE=/srv/boosty.cookies.txt"
 Environment="TARGET_PATH=/media/MediaFiles/Boosty"
 Environment="TEMP_PATH=/media/MediaFiles/Boosty.tmp"
