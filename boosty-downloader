@@ -7,6 +7,7 @@ YT_DLP="${YT_DLP:-yt-dlp}"
 # COOKIES_FILE="/srv/boosty.cookies.txt"
 # TARGET_PATH="/media/MediaFiles/Boosty"
 # CHANNELS="blog1 blog2 blog3"
+# NOTIFY_EMAIL="user@domain.com"
 
 list_media_types() {
     local channel="$1"
@@ -78,6 +79,22 @@ download_video() {
         "https://boosty.to/$channel/posts/$id"
 }
 
+notify_user() {
+    local email="$1"
+    local channel="$2"
+    local season="$3"
+    local episode="$4"
+
+    if [ -z "$NOTIFY_EMAIL" ]; then
+        return
+    fi
+
+    local message="New boosty video from $channel is available: s${season}e${episode}"
+
+    echo "Sending email notification to $email"
+    printf "Subject: %s\n\n%s" "$message" "$message" | sendmail "$email"
+}
+
 main() {
     if [ -z "$COOKIES_FILE" ]; then
         echo "set COOKIES_FILE environment variable to point to cookies file in netscape format"
@@ -112,6 +129,7 @@ main() {
                     mkdir -p "$TARGET_PATH/$channel/Season $season"
                     cd "$TARGET_PATH/$channel/Season $season"
                     download_video "$channel" "$id" "$season" "$episode"
+                    notify_user "$NOTIFY_EMAIL" "$channel" "$season" "$episode"
                 fi
             done
     done

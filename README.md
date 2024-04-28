@@ -71,6 +71,7 @@ Environment="COOKIES_FILE=/srv/boosty.cookies.txt"
 Environment="TARGET_PATH=/media/MediaFiles/Boosty"
 Environment="TEMP_PATH=/media/MediaFiles/Boosty.tmp"
 Environment="CHANNELS=blog1 blog2 blog3"
+Environment="NOTIFY_EMAIL=user@domain.com"
 ExecStart=boosty-downloader
 
 [Install]
