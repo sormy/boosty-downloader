@@ -2,7 +2,7 @@
 
 # shellcheck disable=SC2046
 
-YT_DLP="${YT_DLP:-yt-dlp-boosty}"
+YT_DLP="${YT_DLP:-yt-dlp}"
 # TEMP_PATH="/media/MediaFiles/Boosty.tmp"
 # COOKIES_FILE="/srv/boosty.cookies.txt"
 # TARGET_PATH="/media/MediaFiles/Boosty"
