@@ -74,7 +74,7 @@ download_video() {
     "$YT_DLP" \
         --cookies "$COOKIES_FILE" \
         $([ -n "$TEMP_PATH" ] && echo "-P temp:$TEMP_PATH") \
-        -o "s${season}e${episode} - %(title)s [%(id)s].%(ext)s" \
+        -o "s${season}e${episode} - %(title)s [${id}].%(ext)s" \
         --add-metadata \
         "https://boosty.to/$channel/posts/$id"
 }
