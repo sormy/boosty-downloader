@@ -5,7 +5,7 @@ be used as scheduled job to download new videos and make them available in Plex.
 
 ## Prerequisites
 
-1. Dependencies: curl bash coreutils sed jq
+1. Dependencies: curl bash coreutils sed jq sendmail
 
 2. A last version of yt-dlp is needed:
 
