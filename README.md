@@ -7,7 +7,7 @@ be used as scheduled job to download new videos and make them available in Plex.
 
 1. Dependencies: curl bash coreutils sed jq
 
-2. A version of yt-dlp 2024.03.10+ is needed:
+2. A last version of yt-dlp is needed:
 
 ```sh
 # install latest yt-dlp using pip in virtual environment
@@ -16,6 +16,9 @@ cd /srv/yt-dlp
 apt install python3-venv
 python3 -m venv .
 ./bin/pip3 install yt-dlp
+
+# update existing yt-dlp (if was already installed)
+./bin/pip3 install --upgrade yt-dlp
 
 # check version of installed yt-dlp to be 2024.03.10+
 ./bin/yt-dlp --version
@@ -30,9 +33,11 @@ yt-dlp --version
 
 3. Cookies file
 
-Use "Get cookies.txt LOCALLY" extension to dump boosty.to cookies into
-boosty.cookies.txt:
-https://chromewebstore.google.com/detail/get-cookiestxt-locally/cclelndahbckbenkjhflpdbgdldlbecc?pli=1
+Use browser plugion to do to dump boosty.to cookies into `boosty.cookies.txt`
+(authenticate before):
+
+- Chrome: https://chromewebstore.google.com/detail/get-cookiestxt-locally
+- Firefox: https://addons.mozilla.org/en-US/firefox/addon/cookies-txt
 
 ## Installation
 
