@@ -73,26 +73,37 @@ download_video() {
 
     "$YT_DLP" \
         --cookies "$COOKIES_FILE" \
+        --no-progress \
         $([ -n "$TEMP_PATH" ] && echo "-P temp:$TEMP_PATH") \
         -o "s${season}e${episode} - %(title)s [${id}].%(ext)s" \
         --add-metadata \
         "https://boosty.to/$channel/posts/$id"
 }
 
-notify_user() {
+send_notification() {
     local email="$1"
     local channel="$2"
     local season="$3"
     local episode="$4"
+    local log_file="$5"
 
     if [ -z "$NOTIFY_EMAIL" ]; then
         return
     fi
 
-    local message="New boosty video from $channel is available: s${season}e${episode}"
+    local log="$(cat "$log_file")"
+    local type="$(echo "$log" | grep -iq "error" && echo "error")"
+
+    local message
+    if [ "$type" = "error" ]; then
+        message="Unable to download new boosty video from $channel: s${season}e${episode}"
+    else
+        message="New boosty video from $channel is available: s${season}e${episode}"
+        log=""
+    fi
 
     echo "Sending email notification to $email"
-    printf "Subject: %s\n\n%s" "$message" "$message" | sendmail "$email"
+    printf "Subject: %s\n\n%s\n\n%s" "$message" "$message" "$log" | sendmail "$email"
 }
 
 main() {
@@ -113,6 +124,7 @@ main() {
     
     local season
     local episode
+    local log_file="$(mktemp)"
 
     for channel in $CHANNELS; do
         echo "Downloading list of media for channel $channel"
@@ -126,10 +138,9 @@ main() {
                     echo "Downloading media file $id ($title)"
                     season="$(date -d "@$timestamp" +'%Y')"
                     episode="$(date -d "@$timestamp" +'%m%d01')"
-                    mkdir -p "$TARGET_PATH/$channel/Season $season"
-                    cd "$TARGET_PATH/$channel/Season $season"
-                    download_video "$channel" "$id" "$season" "$episode"
-                    notify_user "$NOTIFY_EMAIL" "$channel" "$season" "$episode"
+                    mkdir -p "$TARGET_PATH/$channel/Season $season" && cd "$_"
+                    download_video "$channel" "$id" "$season" "$episode" 2>&1 | tee "$log_file"
+                    send_notification "$NOTIFY_EMAIL" "$channel" "$season" "$episode" "$log_file"
                 fi
             done
     done
