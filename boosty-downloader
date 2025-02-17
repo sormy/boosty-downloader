@@ -19,7 +19,12 @@ list_media_types() {
     while true; do
         content="$(curl --silent "https://api.boosty.to/v1/blog/$channel/media_album/?type=video&limit=$limit&limit_by=media&offset=$offset")"
         offset="$(echo "$content" | jq -r .extra.offset)"
-        echo "$content" | jq -r '.data.mediaPosts[] | [.post.id, "video"] | join("\t")'
+        echo "$content" | jq -r '.data.mediaPosts[] 
+                                 | select(.post.title != "" 
+                                          and .media[]?.type == "ok_video"
+                                          and .media[]?.status == "ok")
+                                 | [.post.id, "video"] 
+                                 | join("\t")'
         if [ -z "$offset" ]; then
             break
         fi
@@ -39,9 +44,7 @@ list_media_posts() {
         content="$(curl --silent "https://api.boosty.to/v1/blog/$channel/post/?limit=$limit&$offset_param")"
         offset="$(echo "$content" | jq -r .extra.offset)"
         echo "$content" | jq -r '.data[]
-                                 | select(.title != "" 
-                                          and (.media[]?.type == "ok_video") 
-                                          and (.media[]?.status == "ok"))
+                                 | select(.title != "")
                                  | [.id, .user.blogUrl, .createdAt, .title]
                                  | join("\t")'
         if [ -z "$offset" ]; then
