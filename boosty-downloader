@@ -38,7 +38,12 @@ list_media_posts() {
         offset_param="$([ -n "$offset" ] && echo "offset=$offset")"
         content="$(curl --silent "https://api.boosty.to/v1/blog/$channel/post/?limit=$limit&$offset_param")"
         offset="$(echo "$content" | jq -r .extra.offset)"
-        echo "$content" | jq -r '.data[] | select(.title!="") | [.id, .user.blogUrl, .createdAt, .title] | join("\t")'
+        echo "$content" | jq -r '.data[]
+                                 | select(.title != "" 
+                                          and (.media[]?.type == "ok_video") 
+                                          and (.media[]?.status == "ok"))
+                                 | [.id, .user.blogUrl, .createdAt, .title]
+                                 | join("\t")'
         if [ -z "$offset" ]; then
             break
         fi
