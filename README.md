@@ -1,8 +1,7 @@
-# Boosty Downloader
+# Boosty Downloader (boosty-dl)
 
-Python tool to download videos from Boosty channels. Designed to be used as a
-scheduled job to download new videos and make them available in Plex or
-Jellyfin.
+Boosty Downloader (boosty-dl) — the ultimate tool for mirroring Boosty channels
+into a local media library, fully compatible with Plex and Jellyfin.
 
 ## Features
 
