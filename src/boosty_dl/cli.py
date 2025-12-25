@@ -95,13 +95,13 @@ def main() -> None:
         )
 
         # refresh Plex library if requested
-        if args.plex_section and args.plex_token:
+        if all_downloaded_files and args.plex_section and args.plex_token:
             plex.refresh_plex_library(
                 args.plex_url, args.plex_token, args.plex_section, args.plex_timeout
             )
 
         # refresh Jellyfin library if requested
-        if args.jellyfin_item and args.jellyfin_token:
+        if all_downloaded_files and args.jellyfin_item and args.jellyfin_token:
             jellyfin.refresh_jellyfin_library(
                 args.jellyfin_url,
                 args.jellyfin_token,
@@ -110,7 +110,7 @@ def main() -> None:
             )
 
         # send email notification if requested
-        if args.email_to and all_downloaded_files:
+        if all_downloaded_files and args.email_to:
             count = len(all_downloaded_files)
             subject = f"Boosty: {count} new file{'s' if count != 1 else ''} downloaded"
             body = f"Downloaded {count} file(s):\n\n" + "\n".join(
