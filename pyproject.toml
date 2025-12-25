@@ -1,0 +1,45 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "boosty-dl"
+version = "2.0.0"
+description = "Download videos from Boosty channels"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "Artem Butusov" }]
+classifiers = [
+    "Environment :: Console",
+    "Intended Audience :: End Users/Desktop",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: POSIX :: Linux",
+    "Operating System :: MacOS",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Topic :: Multimedia :: Video",
+]
+keywords = ["boosty", "video", "download", "media"]
+
+[project.urls]
+Homepage = "https://github.com/artem/boosty-downloader"
+Issues = "https://github.com/artem/boosty-downloader/issues"
+
+[project.scripts]
+boosty-dl = "boosty_dl.cli:main"
+
+[project.optional-dependencies]
+dev = ["black", "build", "flake8", "pyright", "pytest", "twine"]
+
+[tool.black]
+line-length = 88
+
+[tool.isort]
+profile = "black"
+
+[tool.pyright]
+typeCheckingMode = "basic"

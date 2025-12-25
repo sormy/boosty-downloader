@@ -1,176 +1,318 @@
 # Boosty Downloader
 
-This simple shell script downloads videos from Boosty using yt-dlp. Designed to
-be used as scheduled job to download new videos and make them available in Plex.
+Python tool to download videos from Boosty channels. Designed to be used as a
+scheduled job to download new videos and make them available in Plex or
+Jellyfin.
 
-## Prerequisites
+## Features
 
-1. Dependencies: curl bash coreutils sed jq sendmail
+- Download videos from Boosty channels
+- Automatic access token refresh
+- Plex and Jellyfin library integration
+- Quality selection
+- Season/episode naming (s2025e0101 format)
+- Video metadata embedding
+- Interface binding (Boosty bans some VPNs)
 
-2. A last version of yt-dlp is needed:
+## Installation
+
+### Prerequisites
+
+- `curl` - downloads videos and makes Boosty API requests
+- `exiftool` - embeds metadata into video files
+- `sendmail` - email notifications (optional)
 
 ```sh
-# install latest yt-dlp using pip in virtual environment
-mkdir -p /srv/yt-dlp
-cd /srv/yt-dlp
-apt install python3-venv
-python3 -m venv .
-./bin/pip3 install yt-dlp
-
-# update existing yt-dlp (if was already installed)
-./bin/pip3 install --upgrade yt-dlp
-
-# check version of installed yt-dlp to be 2024.03.10+
-./bin/yt-dlp --version
-
-# for convinience, create symlink in search path
-ln -sf /srv/yt-dlp/bin/yt-dlp /usr/local/bin/yt-dlp
-
-# update shell search path and check version again
-hash -r
-yt-dlp --version
+apt install curl exiftool sendmail # debian/ubuntu
+brew install curl exiftool # macos
 ```
 
-3. Cookies file
+### From PyPI (recommended)
 
-Use browser plugion to do to dump boosty.to cookies into `boosty.cookies.txt`
-(authenticate before):
+```sh
+apt install pipx # debian/ubuntu
+brew install pipx # macos
+pipx install boosty-dl
+```
+
+### From source
+
+```sh
+git clone https://github.com/sormy/boosty-downloader.git
+cd boosty-downloader
+
+# install boosty-dl
+python3 -m venv .venv
+.venv/bin/pip install -e .
+ln -sf $(realpath .venv/bin/boosty-dl) /usr/local/bin/boosty-dl
+
+# install backward compatible script (if needed)
+ln -sf $(realpath bin/boosty-downloader) /usr/local/bin/boosty-downloader
+```
+
+### Cookies file
+
+Export your Boosty cookies to `boosty.cookies.txt` using a browser extension:
 
 - Chrome: https://chromewebstore.google.com/detail/get-cookiestxt-locally
 - Firefox: https://addons.mozilla.org/en-US/firefox/addon/cookies-txt
 
-## Installation
-
-```sh
-cd /srv
-git clone https://github.com/sormy/boosty-downloader.git
-ln -sfv /srv/boosty-downloader/boosty-downloader /usr/local/bin/boosty-downloader
-```
+The tool uses cookies to authenticate and automatically refreshes the access
+token. Without cookies, only free content is available.
 
 ## Usage
+
+### Basic usage
+
+```sh
+# Download from a single channel
+boosty-dl -c boosty.cookies.txt -o ./videos channelname
+boosty-dl -c boosty.cookies.txt -o ./videos https://boosty.to/channel
+
+# Download from multiple channels
+boosty-dl -c boosty.cookies.txt -o ./videos channel1 channel2 channel3
+
+# Download from a specific post
+boosty-dl -c boosty.cookies.txt -o ./videos https://boosty.to/channel/posts/post-id
+```
+
+### Options
+
+```
+-c, --cookies FILE          Path to cookies file (optional, for paid content)
+-o, --output DIR            Output directory (default: current directory)
+-q, --max-quality QUALITY   Max quality: tiny, lowest, low, medium, high, full_hd, quad_hd, ultra_hd
+--days-back DAYS            Download only posts from last N days (useful for scheduled jobs)
+--no-season-dir             Don't create season subdirectories
+--no-channel-dir            Don't create channel subdirectories
+--update-metadata           Update metadata for existing videos without re-downloading
+--lock-file PATH            Lock file to prevent parallel downloads
+--plex-url URL              Plex server URL (default: http://localhost:32400)
+--plex-token TOKEN          Plex access token (or set PLEX_TOKEN env var)
+--plex-section NAME/KEY     Plex library section name or key to refresh
+--plex-timeout SEC          Plex timeout in seconds (default: 30)
+--jellyfin-url URL          Jellyfin server URL (default: http://localhost:8096)
+--jellyfin-token TOKEN      Jellyfin API key (or set JELLYFIN_TOKEN env var)
+--jellyfin-item NAME/ID     Jellyfin library item name or ID to refresh
+--jellyfin-timeout SEC      Jellyfin timeout in seconds (default: 30)
+--email-to EMAIL            Email address for download notifications
+```
+
+**Network interface binding:** Some VPNs or regions may be blocked by Boosty.
+Use `CURL_OPTS="--interface eth0"` to bind to a specific network interface that
+has proper access.
+
+**Lock file:** When running as a scheduled job, use `--lock-file` to prevent
+overlapping downloads if a previous run takes too long.
+
+**Plex/Jellyfin:** Automatically finds library sections/items by name - no need
+to look up IDs/keys manually.
+
+### Backward compatibility with v1.x
+
+For users upgrading from v1.x, a backward-compatible shell script wrapper is
+available in `bin/boosty-downloader`:
+
+**Usage with environment variables (v1.x style):**
 
 ```sh
 export COOKIES_FILE="/srv/boosty.cookies.txt"
 export TARGET_PATH="/media/MediaFiles/Boosty"
 export CHANNELS="blog1 blog2 blog3"
-# if boosty support will be merged into upstream
-# export YT_DLP="yt-dlp"
+export NOTIFY_EMAIL="user@domain.com"
 boosty-downloader
 ```
 
-## Service
+The wrapper translates v1.x environment variables to v2.x command-line
+arguments.
 
-Create service unit:
+## Environment Variables
 
-```
-nano /etc/systemd/system/boosty-downloader.service
+The tool supports the following environment variables:
 
+**Authentication & Security:**
+
+- `PLEX_TOKEN` - Plex authentication token (alternative to `--plex-token`)
+- `JELLYFIN_TOKEN` - Jellyfin API key (alternative to `--jellyfin-token`)
+
+**Binary Paths:**
+
+- `CURL_BIN` - Path to curl binary (default: `curl`)
+- `EXIFTOOL_BIN` - Path to exiftool binary (default: `exiftool`)
+- `SENDMAIL_BIN` - Path to sendmail binary (default: `/usr/sbin/sendmail`)
+
+**Advanced Options:**
+
+- `CURL_OPTS` - Additional curl options (e.g., `--interface eth0`)
+- `CURL_DEBUG` - Enable curl debug output (set to `1`)
+
+**v1.x Compatibility (for `boosty-downloader` wrapper):**
+
+- `COOKIES_FILE` - Path to cookies file (maps to `-c`)
+- `TARGET_PATH` - Output directory (maps to `-o`)
+- `CHANNELS` - Space-separated channel list
+- `NOTIFY_EMAIL` - Email for notifications (maps to `--email-to`)
+
+## Scheduled Downloads with Systemd
+
+Set up a systemd timer for automated periodic downloads.
+
+Create service unit `/etc/systemd/system/boosty-dl.service`:
+
+```ini
 [Unit]
-Wants=boosty-downloader.timer
+Description=Boosty Downloader
+Wants=boosty-dl.timer
+Requires=media-MediaFiles.mount
+After=media-MediaFiles.mount
 
 [Service]
 Type=oneshot
 User=root
-Environment="YT_DLP=/usr/local/bin/yt-dlp"
-Environment="COOKIES_FILE=/srv/boosty.cookies.txt"
-Environment="TARGET_PATH=/media/MediaFiles/Boosty"
-Environment="TEMP_PATH=/media/MediaFiles/Boosty.tmp"
-Environment="CHANNELS=blog1 blog2 blog3"
-Environment="NOTIFY_EMAIL=user@domain.com"
-ExecStart=boosty-downloader
+Environment="PLEX_TOKEN=YOUR_PLEX_TOKEN"
+Environment="JELLYFIN_TOKEN=YOUR_JELLYFIN_TOKEN"
+ExecStart=/usr/local/bin/boosty-dl \
+    -c /srv/boosty.cookies.txt \
+    -o /media/MediaFiles/Boosty \
+    --days-back 7 \
+    --lock-file /var/run/boosty-dl.lock \
+    --plex-url http://localhost:32400 \
+    --plex-section "Boosty" \
+    --jellyfin-url http://localhost:8096 \
+    --jellyfin-item "Boosty" \
+    --email-to admin@example.com \
+    channel1 channel2 channel3
+
 
 [Install]
 WantedBy=multi-user.target
 ```
 
-Create timer unit:
+Create timer unit `/etc/systemd/system/boosty-dl.timer`:
 
-```
-nano /etc/systemd/system/boosty-downloader.timer
-
+```ini
 [Unit]
-Requires=boosty-downloader.service
+Description=Boosty Downloader Timer
+Requires=boosty-dl.service
 
 [Timer]
-Unit=boosty-downloader.service
 OnCalendar=hourly
+Persistent=true
 
 [Install]
 WantedBy=timers.target
 ```
 
+Enable and start:
+
 ```sh
-# reload units
 systemctl daemon-reload
-# try to start once
-systemctl start boosty-downloader
-# check status and logs
-systemctl status boosty-downloader
-journalctl -u boosty-downloader
-# if all is ok, enable timer
-systemctl enable boosty-downloader.timer
+systemctl enable --now boosty-dl.timer
+systemctl status boosty-dl.timer
+journalctl -u boosty-dl -f
 ```
 
-## Plex rescan
+**Key options for scheduled downloads:**
 
-Login to Plex console, open debug console, open local storage and grab value of
-"myPlexAccessToken".
+- `--days-back 7` - Check only recent posts (reduces API calls)
+- `--lock-file` - Prevent overlapping runs
+- `--plex-section` or `--jellyfin-item` - Auto-refresh media library
+- `--email-to` - Email notifications for new downloads
 
-Find section IDs:
+## Plex Integration
+
+Automatically refreshes your Plex library after downloading. Library sections
+are found by name.
+
+**Recommended: Environment variable (prevents token exposure in process
+listings):**
 
 ```sh
-curl -L -X GET 'http://localhost:32400/library/sections' \
-    -H 'Accept: application/json' \
-    -H 'X-Plex-Token: <TOKEN>' \
-    | jq '.MediaContainer.Directory[] | { key: .key, title: .title }'
+export PLEX_TOKEN="YOUR_TOKEN"
+boosty-dl -c cookies.txt -o ./videos \
+    --plex-url http://localhost:32400 \
+    --plex-section "Boosty" \
+    channelname
 ```
 
-Edit `boosty-downloader.service`:
-
-```
-nano /etc/systemd/system/boosty-downloader.service
-
-[Service]
-...
-Environment="PLEX_SECTION=<PLEX_SECTION_ID>"
-Environment="PLEX_TOKEN=<PLEX_TOKEN>"
-# see more https://support.plex.tv/articles/201638786-plex-media-server-url-commands/
-ExecStartPost=curl -sS -L -X GET \
-    'http://localhost:32400/library/sections/${PLEX_SECTION}/refresh' \
-    -H 'X-Plex-Token: ${PLEX_TOKEN}'
-```
-
-## Jellyfin rescan
-
-Login to Jellyfin console, open settings and create new api key.
-
-Find item IDs:
+**Alternative: Command-line argument:**
 
 ```sh
-curl -sS -L -X GET -G \
-    "http://localhost:8096/Items" \
-    -H 'Authorization: MediaBrowser Token=<JELLYFIN_API_KEY>' \
-    -d 'Recursive=True' \
-    -d 'IncludeItemTypes=CollectionFolder' \
-    | jq '.Items[] | { id: .Id, name: .Name }'
+boosty-dl -c cookies.txt -o ./videos \
+    --plex-url http://localhost:32400 \
+    --plex-token YOUR_TOKEN \
+    --plex-section "Boosty" \
+    channelname
 ```
 
-Edit `boosty-downloader.service`:
+**Note:** If token starts with `-`, use `--plex-token=-YOUR_TOKEN` format.
 
-```
-nano /etc/systemd/system/boosty-downloader.service
+**Getting your Plex token:**
 
-[Service]
-...
-Environment="JELLYFIN_ITEM=<JELLYFIN_ITEM_ID>"
-Environment="JELLYFIN_TOKEN=<JELLYFIN_API_KEY>"
-# see more https://api.jellyfin.org/#tag/ItemRefresh/operation/RefreshItem
-ExecStartPost=curl -sS -L -X POST \
-    'http://localhost:8096/Items/${JELLYFIN_ITEM}/Refresh' \
-    -H 'Authorization: MediaBrowser Token="${JELLYFIN_TOKEN}"' \
-    -d 'Recursive=true' \
-    -d 'MetadataRefreshMode=Default' \
-    -d 'ImageRefreshMode=Default' \
-    -d 'ReplaceAllImages=false' \
-    -d 'ReplaceAllMetadata=false'
+1. Open Plex Web
+2. Press F12 → Console tab
+3. Type: `localStorage.getItem('myPlexAccessToken')`
+4. Copy the token (without quotes)
+
+## Jellyfin Integration
+
+Automatically refreshes your Jellyfin library after downloading. Library items
+are found by name.
+
+**Recommended: Environment variable (prevents token exposure in process
+listings):**
+
+```sh
+export JELLYFIN_TOKEN="YOUR_API_KEY"
+boosty-dl -c cookies.txt -o ./videos \
+    --jellyfin-url http://localhost:8096 \
+    --jellyfin-item "Boosty" \
+    channelname
 ```
+
+**Alternative: Command-line argument:**
+
+```sh
+boosty-dl -c cookies.txt -o ./videos \
+    --jellyfin-url http://localhost:8096 \
+    --jellyfin-token YOUR_API_KEY \
+    --jellyfin-item "Boosty" \
+    channelname
+```
+
+**Getting your API key:**
+
+1. Jellyfin Dashboard → API Keys
+2. Click "+" to create new key
+3. Name it (e.g., "boosty-dl")
+4. Copy the generated key
+
+## Development
+
+```sh
+# Clone repository
+git clone https://github.com/sormy/boosty-downloader.git
+cd boosty-downloader
+
+# Install in development mode with dev dependencies
+make dev
+
+# Run tests
+make test
+
+# Format code
+make format
+
+# Run linters
+make lint
+
+# Build package
+make build
+
+# Publish to PyPI
+make publish
+```
+
+## License
+
+MIT

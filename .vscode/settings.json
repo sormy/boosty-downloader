@@ -3,6 +3,10 @@
         "editor.formatOnSave": true,
         "editor.defaultFormatter": "esbenp.prettier-vscode"
     },
-    "editor.rulers": [80],
+    "[python]": {
+        "editor.formatOnSave": true,
+        "editor.defaultFormatter": "ms-python.black-formatter"
+    },
+    "editor.rulers": [88],
     "prettier.proseWrap": "always"
 }

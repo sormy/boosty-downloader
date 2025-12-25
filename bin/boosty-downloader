@@ -1,0 +1,19 @@
+#!/usr/bin/bash
+
+# This is backward-compatible script for v1.0.0 users.
+
+# COOKIES_FILE="/srv/boosty.cookies.txt"
+# TARGET_PATH="/media/MediaFiles/Boosty"
+# CHANNELS="blog1 blog2 blog3"
+# NOTIFY_EMAIL="user@domain.com"
+
+main() {
+    local args=()
+    [ -n "$COOKIES_FILE" ] && args+=(-c "$COOKIES_FILE")
+    [ -n "$TARGET_PATH" ] && args+=(-o "$TARGET_PATH")
+    [ -n "$NOTIFY_EMAIL" ] && args+=(--email-to "$NOTIFY_EMAIL")
+
+    boosty-dl "${args[@]}" "${CHANNELS:-$*}"
+}
+
+main "$@"
