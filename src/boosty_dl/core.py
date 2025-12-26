@@ -128,6 +128,10 @@ def _download_post_videos(
         return downloaded_files
 
     video_count = _count_valid_videos(post)
+    if video_count == 0:
+        print(f"Skipping (no videos): {post_name}")
+        return downloaded_files
+
     is_single_video = video_count == 1
 
     video_index = start_video_index
