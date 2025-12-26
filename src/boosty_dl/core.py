@@ -119,6 +119,7 @@ def _download_post_videos(
     post_title = post["title"]
     created_at = datetime.fromtimestamp(post["createdAt"])
     post_url = f"https://boosty.to/{channel_name}/posts/{post_id}"
+    post_artist = post.get("user", {}).get("name", channel_name)
 
     post_name = _generate_name(created_at, 0, post_title or post_id)
     downloaded_files = []
@@ -191,7 +192,7 @@ def _download_post_videos(
         if media.download_file(filepath, url):
             print(f"Embedding metadata: {filename}")
             media.download_and_embed_metadata(
-                filepath, channel_name, video_title, preview_url, post_url
+                filepath, post_artist, video_title, preview_url, post_url
             )
             downloaded_files.append(filename)
 

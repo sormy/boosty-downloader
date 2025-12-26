@@ -46,7 +46,7 @@ def _download_preview(url: str, filepath: str) -> bool:
 
 def _embed_metadata(
     media_filepath: str,
-    channel_name: str,
+    artist: str,
     title: str,
     preview_filepath: str | None = None,
     post_url: str | None = None,
@@ -61,8 +61,8 @@ def _embed_metadata(
             changed = True
 
         existing_artist = (mp4.get(MP4_ARTIST) or [None])[0]
-        if existing_artist != channel_name:
-            mp4[MP4_ARTIST] = channel_name
+        if existing_artist != artist:
+            mp4[MP4_ARTIST] = artist
             changed = True
 
         if preview_filepath and os.path.exists(preview_filepath):
@@ -92,7 +92,7 @@ def _embed_metadata(
 
 def download_and_embed_metadata(
     media_filepath: str,
-    channel_name: str,
+    artist: str,
     title: str,
     preview_url: str | None = None,
     post_url: str | None = None,
@@ -104,9 +104,7 @@ def download_and_embed_metadata(
         if not _download_preview(preview_url, preview_path):
             preview_path = None
 
-    result = _embed_metadata(
-        media_filepath, channel_name, title, preview_path, post_url
-    )
+    result = _embed_metadata(media_filepath, artist, title, preview_path, post_url)
 
     if preview_path and os.path.exists(preview_path):
         os.remove(preview_path)

@@ -38,12 +38,21 @@ class PostItem(TypedDict):
     defaultPreview: str | None
 
 
+class User(TypedDict):
+    id: int
+    name: str
+    blogUrl: str  # actually, just channel name
+    hasAvatar: bool
+    avatarUrl: str | None
+
+
 class Post(TypedDict):
     id: str
     title: str
     createdAt: float
     hasAccess: bool
     data: list[PostItem]
+    user: User
 
 
 BOOSTY_API_URL = "https://api.boosty.to"
