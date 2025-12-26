@@ -18,12 +18,11 @@ into a local media library, fully compatible with Plex and Jellyfin.
 ### Prerequisites
 
 - `curl` - downloads videos and makes Boosty API requests
-- `exiftool` - embeds metadata into video files
 - `sendmail` - email notifications (optional)
 
 ```sh
-apt install curl exiftool sendmail # debian/ubuntu
-brew install curl exiftool # macos
+apt install curl sendmail # debian/ubuntu
+brew install curl # macos
 ```
 
 ### From PyPI (recommended)
@@ -143,7 +142,6 @@ The tool supports the following environment variables:
 **Binary Paths:**
 
 - `CURL_BIN` - Path to curl binary (default: `curl`)
-- `EXIFTOOL_BIN` - Path to exiftool binary (default: `exiftool`)
 - `SENDMAIL_BIN` - Path to sendmail binary (default: `/usr/sbin/sendmail`)
 
 **Advanced Options:**

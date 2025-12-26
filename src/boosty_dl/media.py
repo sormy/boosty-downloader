@@ -3,9 +3,15 @@ import shlex
 import subprocess
 import sys
 
+from mutagen.mp4 import MP4, MP4Cover
+
 CURL_BIN = os.environ.get("CURL_BIN", "curl")
 CURL_OPTS = shlex.split(os.environ.get("CURL_OPTS", ""))
-EXIFTOOL_BIN = os.environ.get("EXIFTOOL_BIN", "exiftool")
+
+MP4_TITLE = "\xa9nam"
+MP4_ARTIST = "\xa9ART"
+MP4_COMMENT = "\xa9cmt"
+MP4_COVERART = "covr"
 
 
 def _get_remote_file_size(url: str) -> int | None:
@@ -45,20 +51,41 @@ def _embed_metadata(
     preview_filepath: str | None = None,
     post_url: str | None = None,
 ) -> None:
-    cmd = [EXIFTOOL_BIN, f"-Title={title}", f"-Artist={channel_name}"]
-
-    if preview_filepath:
-        cmd.append(f"-CoverArt<={preview_filepath}")
-    if post_url:
-        cmd.append(f"-Comment={post_url}")
-
-    cmd.extend(["-overwrite_original", "-q", media_filepath])
-
     try:
-        subprocess.run(cmd, capture_output=True, text=True, check=True)
-    except subprocess.CalledProcessError as e:
+        mp4 = MP4(media_filepath)
+
+        changed = False
+        existing_title = (mp4.get(MP4_TITLE) or [None])[0]
+        if existing_title != title:
+            mp4[MP4_TITLE] = title
+            changed = True
+
+        existing_artist = (mp4.get(MP4_ARTIST) or [None])[0]
+        if existing_artist != channel_name:
+            mp4[MP4_ARTIST] = channel_name
+            changed = True
+
+        if preview_filepath and os.path.exists(preview_filepath):
+            with open(preview_filepath, "rb") as f:
+                cover_data = f.read()
+                existing_cover = (mp4.get(MP4_COVERART) or [None])[0]
+                if existing_cover is None or bytes(existing_cover) != cover_data:
+                    mp4[MP4_COVERART] = [MP4Cover(cover_data)]
+                    changed = True
+
+        if post_url:
+            existing_comment = (mp4.get(MP4_COMMENT) or [None])[0]
+            if existing_comment != post_url:
+                mp4[MP4_COMMENT] = post_url
+                changed = True
+
+        if changed:
+            mp4.save()
+        else:
+            print(f"Metadata already up to date: {os.path.basename(media_filepath)}")
+    except Exception as e:
         print(
-            f"WARNING: exiftool failed to set metadata: {e.stderr}",
+            f"WARNING: Failed to set metadata: {e}",
             file=sys.stderr,
         )
 

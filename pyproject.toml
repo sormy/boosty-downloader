@@ -24,6 +24,7 @@ classifiers = [
     "Topic :: Multimedia :: Video",
 ]
 keywords = ["boosty", "video", "download", "media"]
+dependencies = ["mutagen~=1.45"]
 
 [project.urls]
 Homepage = "https://github.com/artem/boosty-downloader"
