@@ -100,15 +100,20 @@ def _get_time_until_expiry(expires_at_ms: int) -> float:
     return (expires_at_ms / 1000) - time.time()
 
 
-def get_access_token(cookies_file: str) -> str | None:
+def get_access_token(cookies_file: str, force_refresh: bool = False) -> str | None:
     auth_data = _parse_cookie(cookies_file)
     if not auth_data:
         return None
 
     time_until_expiry = _get_time_until_expiry(auth_data["expiresAt"])
 
-    if time_until_expiry < TOKEN_REFRESH_THRESHOLD_SECONDS:
-        if time_until_expiry < 0:
+    if force_refresh or time_until_expiry < TOKEN_REFRESH_THRESHOLD_SECONDS:
+        if force_refresh:
+            print(
+                "Forcing access token refresh...",
+                file=sys.stderr,
+            )
+        elif time_until_expiry < 0:
             print(
                 "WARNING: Access token expired, refreshing...",
                 file=sys.stderr,
@@ -144,5 +149,11 @@ def get_access_token(cookies_file: str) -> str | None:
             print(f"ERROR: Access token refresh failed: {e}", file=sys.stderr)
             if time_until_expiry < 0:
                 return None
+
+    expire_in_days = time_until_expiry / SECONDS_PER_DAY
+    print(
+        f"Access token loaded, expires in {expire_in_days:.1f} days",
+        file=sys.stderr,
+    )
 
     return auth_data["accessToken"]

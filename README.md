@@ -56,6 +56,11 @@ Export your Boosty cookies to `boosty.cookies.txt` using a browser extension:
 - Chrome: https://chromewebstore.google.com/detail/get-cookiestxt-locally
 - Firefox: https://addons.mozilla.org/en-US/firefox/addon/cookies-txt
 
+**Recommendation:** Export cookies from an **incognito/private browser tab**.
+This creates a separate session with a unique client ID. This way, access token
+refreshes by boosty-dl won't interfere with your regular browser session, and
+token refreshes in your browser won't invalidate the boosty-dl cookies file.
+
 The tool uses cookies to authenticate and automatically refreshes the access
 token. Without cookies, only free content is available.
 
@@ -78,23 +83,24 @@ boosty-dl -c boosty.cookies.txt -o ./videos https://boosty.to/channel/posts/post
 ### Options
 
 ```
--c, --cookies FILE          Path to cookies file (optional, for paid content)
--o, --output DIR            Output directory (default: current directory)
--q, --max-quality QUALITY   Max quality: tiny, lowest, low, medium, high, full_hd, quad_hd, ultra_hd
---days-back DAYS            Download only posts from last N days (useful for scheduled jobs)
---no-season-dir             Don't create season subdirectories
---no-channel-dir            Don't create channel subdirectories
---update-metadata           Update metadata for existing videos without re-downloading
---lock-file PATH            Lock file to prevent parallel downloads
---plex-url URL              Plex server URL (default: http://localhost:32400)
---plex-token TOKEN          Plex access token (or set PLEX_TOKEN env var)
---plex-section NAME/KEY     Plex library section name or key to refresh
---plex-timeout SEC          Plex timeout in seconds (default: 30)
---jellyfin-url URL          Jellyfin server URL (default: http://localhost:8096)
---jellyfin-token TOKEN      Jellyfin API key (or set JELLYFIN_TOKEN env var)
---jellyfin-item NAME/ID     Jellyfin library item name or ID to refresh
---jellyfin-timeout SEC      Jellyfin timeout in seconds (default: 30)
---email-to EMAIL            Email address for download notifications
+-c, --cookies FILE                  Cookies file (optional, for paid content)
+--force-access-token-refresh        Force refresh of access token even if not expired
+-o, --output DIR                    Output directory (default: current directory)
+-q, --max-quality QUALITY           Maximum quality: tiny, lowest, low, medium, high, full_hd, quad_hd, ultra_hd
+--days-back DAYS                    Process last N days only
+--update-metadata                   Update metadata for existing files without downloading
+--no-season-dir                     Don't create season directories
+--no-channel-dir                    Don't create channel directories
+--lock-file PATH                    Lock file path
+--plex-section NAME/KEY             Plex library section name or key to refresh
+--plex-url URL                      Plex server URL (default: http://localhost:32400)
+--plex-token TOKEN                  Plex authentication token (or set PLEX_TOKEN env var)
+--plex-timeout SEC                  Plex timeout in seconds (default: 30)
+--jellyfin-item NAME/ID             Jellyfin library item name or ID to refresh
+--jellyfin-url URL                  Jellyfin server URL (default: http://localhost:8096)
+--jellyfin-token TOKEN              Jellyfin authentication token (or set JELLYFIN_TOKEN env var)
+--jellyfin-timeout SEC              Jellyfin timeout in seconds (default: 30)
+--email-to EMAIL                    Email address to send download notifications to
 ```
 
 **Network interface binding:** Some VPNs or regions may be blocked by Boosty.

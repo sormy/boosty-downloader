@@ -11,6 +11,11 @@ def main() -> None:
     parser.add_argument(
         "-c", "--cookies", help="Cookies file (optional, for paid content)"
     )
+    parser.add_argument(
+        "--force-access-token-refresh",
+        action="store_true",
+        help="Force refresh of access token even if not expired",
+    )
     parser.add_argument("-o", "--output", default=".", help="Output directory")
     parser.add_argument(
         "-q", "--max-quality", choices=api.QUALITIES, help="Maximum quality"
@@ -75,7 +80,9 @@ def main() -> None:
         # get access token if cookies provided
         access_token = None
         if args.cookies:
-            access_token = auth.get_access_token(args.cookies)
+            access_token = auth.get_access_token(
+                args.cookies, force_refresh=args.force_access_token_refresh
+            )
             if not access_token:
                 print(
                     "WARNING: No valid access token, only free content available",
