@@ -50,10 +50,18 @@ ln -sf $(realpath bin/boosty-downloader) /usr/local/bin/boosty-downloader
 
 ### Cookies file
 
-Export your Boosty cookies to `boosty.cookies.txt` using a browser extension:
+Export your Boosty cookies using a browser extension:
 
-- Chrome: https://chromewebstore.google.com/detail/get-cookiestxt-locally
+- Chrome:
+  https://chromewebstore.google.com/detail/get-cookiestxt-locally/cclelndahbckbenkjhflpdbgdldlbecc
 - Firefox: https://addons.mozilla.org/en-US/firefox/addon/cookies-txt
+
+**Automatic detection:** If `-c` is not provided, the tool automatically checks
+for cookies in:
+
+1. `cookies.txt` (current directory)
+2. `.boosty.cookies.txt` (current directory)
+3. `~/.boosty.cookies.txt` (home directory)
 
 **Recommendation:** Export cookies from an **incognito/private browser tab**.
 This creates a separate session with a unique client ID. This way, access token

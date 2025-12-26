@@ -101,6 +101,7 @@ def _get_time_until_expiry(expires_at_ms: int) -> float:
 
 
 def get_access_token(cookies_file: str, force_refresh: bool = False) -> str | None:
+    print(f"Loading cookies from: {cookies_file}", file=sys.stderr)
     auth_data = _parse_cookie(cookies_file)
     if not auth_data:
         return None

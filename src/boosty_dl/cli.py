@@ -5,6 +5,18 @@ import sys
 from . import auth, api, core, email, jellyfin, lock, plex
 
 
+def _find_default_cookies_file() -> str | None:
+    candidates = [
+        "cookies.txt",
+        ".boosty.cookies.txt",
+        os.path.expanduser("~/.boosty.cookies.txt"),
+    ]
+    for path in candidates:
+        if os.path.exists(path):
+            return path
+    return None
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Download videos from Boosty channels")
     parser.add_argument("channels", nargs="+", help="Channel names or URLs")
@@ -69,6 +81,10 @@ def main() -> None:
     sys.stdout.reconfigure(line_buffering=True)  # type: ignore[attr-defined]
 
     try:
+        # find default cookies file if not provided
+        if not args.cookies:
+            args.cookies = _find_default_cookies_file()
+
         # disable multiple instances if lock file specified
         if args.lock_file and lock.acquire_lock(args.lock_file) is None:
             raise RuntimeError(f"Another instance running (lock: {args.lock_file})")
